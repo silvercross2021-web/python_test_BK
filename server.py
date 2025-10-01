@@ -43,11 +43,13 @@ def book(competition,club):
 
 @app.route('/purchasePlaces',methods=['POST'])
 def purchasePlaces():
-    # ... (les premières lignes de la fonction restent les mêmes)
     competition = next((c for c in competitions if c.get('name') == request.form.get('competition')), None)
     club = next((c for c in clubs if c.get('name') == request.form.get('club')), None)
     
-    # ... (la gestion des erreurs et la validation des places restent les mêmes)
+    if not competition or not club:
+        flash('Erreur : Club ou compétition introuvable. Transaction annulée.')
+        return redirect(url_for('index'))
+
     try:
         placesRequired = int(request.form.get('places', 0))
     except ValueError:
@@ -58,27 +60,30 @@ def purchasePlaces():
         flash('Veuillez sélectionner au moins 1 place.')
         return redirect(url_for('index'))
         
-    # --- DÉBUT DE LA CORRECTION ---
-    
-    # 1. On récupère le nombre de places actuel de la compétition.
-    # On utilise int() pour le transformer en nombre afin de pouvoir le comparer.
+    club_points = int(club.get('points', 0))
     competition_places = int(competition.get('numberOfPlaces', 0))
-    
-    # 2. C'est la vérification clé : on compare les places demandées aux places disponibles.
+
+    # VÉRIFICATION 1 : Le club a-t-il assez de points ?
+    if placesRequired > club_points:
+        flash(f"Achat impossible. Vous n'avez que {club_points} points.")
+        return render_template('welcome.html', club=club, competitions=competitions)
+
+    # VÉRIFICATION 2 : Y a-t-il assez de places ?
     if placesRequired > competition_places:
-        # 3. Si la demande est trop élevée, on bloque et on envoie un message d'erreur.
         flash(f"Action impossible : il ne reste que {competition_places} places disponibles.")
-        # On retourne l'utilisateur sur la page de bienvenue pour qu'il voie les soldes actuels.
         return render_template('welcome.html', club=club, competitions=competitions)
         
+    # --- DÉBUT DE LA CORRECTION ---
+    # Si toutes les vérifications ci-dessus ont réussi, ALORS on fait la transaction.
+    # Cette section est maintenant au bon endroit.
+    
+    club['points'] = str(club_points - placesRequired)
+    competition['numberOfPlaces'] = str(competition_places - placesRequired)
+    
     # --- FIN DE LA CORRECTION ---
     
-    # Cette ligne n'est exécutée QUE SI la vérification ci-dessus a réussi.
-    competition['numberOfPlaces'] = competition_places - placesRequired
-    
-    flash('Réservation réussie !')
+    flash('Réservation réussie ! Vos points ont été déduits.')
     return render_template('welcome.html', club=club, competitions=competitions)
-
 # TODO: Add route for points display
 
 
