@@ -59,6 +59,12 @@ def purchasePlaces():
     if placesRequired <= 0:
         flash('Veuillez sélectionner au moins 1 place.')
         return redirect(url_for('index'))
+    
+        # --- NOUVELLE VÉRIFICATION AJOUTÉE ---
+    if placesRequired > 12:
+        flash("Action non autorisée : vous ne pouvez pas réserver plus de 12 places à la fois.")
+        return render_template('welcome.html', club=club, competitions=competitions)
+    # --- FIN DE L'AJOUT ---
         
     club_points = int(club.get('points', 0))
     competition_places = int(competition.get('numberOfPlaces', 0))
@@ -84,6 +90,7 @@ def purchasePlaces():
     
     flash('Réservation réussie ! Vos points ont été déduits.')
     return render_template('welcome.html', club=club, competitions=competitions)
+
 # TODO: Add route for points display
 
 
