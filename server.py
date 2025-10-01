@@ -1,15 +1,17 @@
 import json
 from flask import Flask,render_template,request,redirect,flash,url_for
+from pathlib import Path
 
 
+BASE_DIR = Path(__file__).resolve().parent
 def loadClubs():
-    with open('clubs.json') as c:
+    with open(BASE_DIR / 'clubs.json', encoding='utf-8') as c:
          listOfClubs = json.load(c)['clubs']
          return listOfClubs
 
 
 def loadCompetitions():
-    with open('competitions.json') as comps:
+    with open(BASE_DIR / 'competitions.json', encoding='utf-8') as comps:
          listOfCompetitions = json.load(comps)['competitions']
          return listOfCompetitions
 
@@ -26,20 +28,25 @@ def index():
 
 @app.route('/showSummary',methods=['POST'])
 def showSummary():
-    club = [club for club in clubs if club['email'] == request.form['email']][0]
+    email = request.form.get('email', '').strip()
+    club = next((c for c in clubs if c.get('email') == email), None)
+    if club is None:
+        flash('Adresse e-mail inconnue. Veuillez réessayer.')
+        return redirect(url_for('index'))
+  
     return render_template('welcome.html',club=club,competitions=competitions)
 
 
 @app.route('/book/<competition>/<club>')
 def book(competition,club):
-    foundClub = [c for c in clubs if c['name'] == club][0]
-    foundCompetition = [c for c in competitions if c['name'] == competition][0]
+    foundClub = next((c for c in clubs if c.get('name') == club), None)
+    foundCompetition = next((c for c in competitions if c.get('name') == competition), None)
+    
     if foundClub and foundCompetition:
-        return render_template('booking.html',club=foundClub,competition=foundCompetition)
+        return render_template('booking.html', club=foundClub, competition=foundCompetition)
     else:
-        flash("Something went wrong-please try again")
-        return render_template('welcome.html', club=club, competitions=competitions)
-
+        flash("Club ou compétition introuvable.")
+        return redirect(url_for('index'))
 
 @app.route('/purchasePlaces',methods=['POST'])
 def purchasePlaces():
@@ -94,9 +101,21 @@ def purchasePlaces():
 # TODO: Add route for points display
 
 
+@app.route('/points-board')
+def points_board():
+    """
+    Affiche un tableau public et en lecture seule des points de chaque club.
+    Accessible sans connexion pour la transparence.
+    """
+    print("Contenu de la variable 'clubs' envoyée au template :", clubs)
+    return render_template('points_board.html', clubs=clubs)
+
+
 @app.route('/logout')
 def logout():
     return redirect(url_for('index'))
+
+
 
 
 if __name__ == '__main__':

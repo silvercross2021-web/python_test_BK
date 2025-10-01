@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Classement des Points - GUDLFT</title>
+</head>
+<body>
+    
+    <h1>Tableau des Points des Clubs</h1>
+    <p>Ce tableau public assure la transparence sur le solde de points de chaque club.</p>
+    
+    <table border="1" style="width: 60%; border-collapse: collapse;">
+        <thead>
+            <tr style="background-color: #f2f2f2;">
+                <th style="padding: 8px;">Nom du Club</th>
+                <th style="padding: 8px;">Points Disponibles</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for club in clubs %}
+            <tr>
+                <td style="padding: 8px;">{{ club.name }}</td>
+                <td style="padding: 8px; text-align: center;">{{ club.points }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <a href="{{ url_for('index') }}">Retour à l'accueil</a>
+</body>
+</html>
