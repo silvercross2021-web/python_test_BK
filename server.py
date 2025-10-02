@@ -15,12 +15,18 @@ def loadCompetitions():
          listOfCompetitions = json.load(comps)['competitions']
          return listOfCompetitions
 
+def saveData(clubs, competitions):
+    """Sauvegarde les listes de clubs et de compétitions dans leurs fichiers JSON respectifs."""
+    with open(BASE_DIR / 'clubs.json', 'w', encoding='utf-8') as c:
+        json.dump({'clubs': clubs}, c, indent=4)
+    with open(BASE_DIR / 'competitions.json', 'w', encoding='utf-8') as comps:
+        json.dump({'competitions': competitions}, comps, indent=4)
+
 
 app = Flask(__name__)
 app.secret_key = 'something_special'
 
-competitions = loadCompetitions()
-clubs = loadClubs()
+
 
 @app.route('/')
 def index():
@@ -28,6 +34,8 @@ def index():
 
 @app.route('/showSummary',methods=['POST'])
 def showSummary():
+    competitions = loadCompetitions()
+    clubs = loadClubs()
     email = request.form.get('email', '').strip()
     club = next((c for c in clubs if c.get('email') == email), None)
     if club is None:
@@ -39,6 +47,8 @@ def showSummary():
 
 @app.route('/book/<competition>/<club>')
 def book(competition,club):
+    competitions = loadCompetitions()
+    clubs = loadClubs()
     foundClub = next((c for c in clubs if c.get('name') == club), None)
     foundCompetition = next((c for c in competitions if c.get('name') == competition), None)
     
@@ -50,6 +60,8 @@ def book(competition,club):
 
 @app.route('/purchasePlaces',methods=['POST'])
 def purchasePlaces():
+    competitions = loadCompetitions()
+    clubs = loadClubs()
     competition = next((c for c in competitions if c.get('name') == request.form.get('competition')), None)
     club = next((c for c in clubs if c.get('name') == request.form.get('club')), None)
     
@@ -92,6 +104,7 @@ def purchasePlaces():
     
     club['points'] = str(club_points - placesRequired)
     competition['numberOfPlaces'] = str(competition_places - placesRequired)
+    saveData(clubs, competitions)
     
     # --- FIN DE LA CORRECTION ---
     
@@ -107,6 +120,7 @@ def points_board():
     Affiche un tableau public et en lecture seule des points de chaque club.
     Accessible sans connexion pour la transparence.
     """
+    clubs = loadClubs()
     print("Contenu de la variable 'clubs' envoyée au template :", clubs)
     return render_template('points_board.html', clubs=clubs)
 
