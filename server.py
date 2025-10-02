@@ -114,8 +114,8 @@ def purchasePlaces():
     # Si toutes les vérifications ci-dessus ont réussi, ALORS on fait la transaction.
     # Cette section est maintenant au bon endroit.
     
-    club['points'] = str(club_points - placesRequired)
-    competition['numberOfPlaces'] = str(competition_places - placesRequired)
+    club['points'] = club_points - placesRequired
+    competition['numberOfPlaces'] = competition_places - placesRequired
         # Enregistrer le nouveau total de places réservées par le club
     competition['placesBookedByClub'][club['name']] = places_already_booked + placesRequired
     saveData(clubs, competitions)
