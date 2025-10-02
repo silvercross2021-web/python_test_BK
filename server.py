@@ -74,6 +74,18 @@ def purchasePlaces():
     except ValueError:
         flash('Nombre de places invalide.')
         return redirect(url_for('index'))
+    
+    # S'assurer que le dictionnaire de suivi existe dans la compétition
+    competition.setdefault('placesBookedByClub', {})
+    # Récupérer les places déjà réservées par ce club pour cette compétition
+    places_already_booked = competition['placesBookedByClub'].get(club['name'], 0)
+
+     # Vérifier si le total des places (anciennes + nouvelles) dépasse 12
+    if places_already_booked + placesRequired > 12:
+        places_remaining_for_club = 12 - places_already_booked
+        flash(f"Action non autorisée : Vous avez déjà réservé {places_already_booked} places. Vous ne pouvez en réserver que {places_remaining_for_club} de plus pour cette compétition.")
+        return render_template('welcome.html', club=club, competitions=competitions)
+    # --- FIN DE LA NOUVELLE LOGIQUE ---
 
     if placesRequired <= 0:
         flash('Veuillez sélectionner au moins 1 place.')
@@ -104,6 +116,8 @@ def purchasePlaces():
     
     club['points'] = str(club_points - placesRequired)
     competition['numberOfPlaces'] = str(competition_places - placesRequired)
+        # Enregistrer le nouveau total de places réservées par le club
+    competition['placesBookedByClub'][club['name']] = places_already_booked + placesRequired
     saveData(clubs, competitions)
     
     # --- FIN DE LA CORRECTION ---
