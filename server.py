@@ -1,6 +1,7 @@
 import json
 from flask import Flask,render_template,request,redirect,flash,url_for
 from pathlib import Path
+from datetime import datetime
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -41,8 +42,15 @@ def showSummary():
     if club is None:
         flash('Adresse e-mail inconnue. Veuillez réessayer.')
         return redirect(url_for('index'))
+    
+    future_competitions = []
+    for comp in competitions:
+        comp_date = datetime.strptime(comp['date'], '%Y-%m-%d %H:%M:%S')
+        if comp_date > datetime.now():
+            
+            future_competitions.append(comp)
   
-    return render_template('welcome.html',club=club,competitions=competitions)
+    return render_template('welcome.html',club=club,competitions=future_competitions)
 
 
 @app.route('/book/<competition>/<club>')
@@ -68,6 +76,13 @@ def purchasePlaces():
     if not competition or not club:
         flash('Erreur : Club ou compétition introuvable. Transaction annulée.')
         return redirect(url_for('index'))
+    
+    # Convertir la date de la compétition (string) en objet datetime
+    competition_date = datetime.strptime(competition['date'], '%Y-%m-%d %H:%M:%S')
+    if competition_date < datetime.now():
+        flash("Action non autorisée : Cette compétition est déjà terminée.")
+        return render_template('welcome.html', club=club, competitions=competitions)
+    # --- FIN DE LA NOUVELLE LOGIQUE ---
 
     try:
         placesRequired = int(request.form.get('places', 0))
