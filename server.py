@@ -150,8 +150,14 @@ def points_board():
     Accessible sans connexion pour la transparence.
     """
     clubs = loadClubs()
+
+    sorted_clubs = sorted(clubs, key=lambda item: int(item['points']), reverse=True)
+
     print("Contenu de la variable 'clubs' envoyée au template :", clubs)
-    return render_template('points_board.html', clubs=clubs)
+
+    return render_template('points_board.html', clubs=sorted_clubs)
+
+
 
 
 @app.route('/logout')
