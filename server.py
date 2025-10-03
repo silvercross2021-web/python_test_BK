@@ -43,15 +43,17 @@ def showSummary():
         flash('Adresse e-mail inconnue. Veuillez réessayer.')
         return redirect(url_for('index'))
     
-    future_competitions = []
+    # --- NOUVELLE LOGIQUE : ÉTIQUETER LES COMPÉTITIONS ---
+    # On ne filtre plus, on ajoute une information à chaque compétition
     for comp in competitions:
         comp_date = datetime.strptime(comp['date'], '%Y-%m-%d %H:%M:%S')
-        if comp_date > datetime.now():
-            
-            future_competitions.append(comp)
-  
-    return render_template('welcome.html',club=club,competitions=future_competitions)
-
+        if comp_date < datetime.now():
+            comp['is_past'] = True
+        else:
+            comp['is_past'] = False
+    # --- FIN DE LA NOUVELLE LOGIQUE ---
+ 
+    return render_template('welcome.html',club=club,competitions=competitions)
 
 @app.route('/book/<competition>/<club>')
 def book(competition,club):
@@ -60,11 +62,20 @@ def book(competition,club):
     foundClub = next((c for c in clubs if c.get('name') == club), None)
     foundCompetition = next((c for c in competitions if c.get('name') == competition), None)
     
-    if foundClub and foundCompetition:
-        return render_template('booking.html', club=foundClub, competition=foundCompetition)
-    else:
+    if not foundClub or not foundCompetition:
         flash("Club ou compétition introuvable.")
         return redirect(url_for('index'))
+
+    # --- C'EST CE BLOC QUI MANQUE ---
+    # Vérifie si la date de la compétition est passée
+    competition_date = datetime.strptime(foundCompetition['date'], '%Y-%m-%d %H:%M:%S')
+    if competition_date < datetime.now():
+        flash("Cette compétition est déjà terminée et ne peut pas être réservée.")
+        return redirect(url_for('index'))
+    # --- FIN DE LA CORRECTION ---
+    
+    # Si la date est bonne, on affiche la page de réservation
+    return render_template('booking.html', club=foundClub, competition=foundCompetition)
 
 @app.route('/purchasePlaces',methods=['POST'])
 def purchasePlaces():
@@ -77,69 +88,48 @@ def purchasePlaces():
         flash('Erreur : Club ou compétition introuvable. Transaction annulée.')
         return redirect(url_for('index'))
     
-    # Convertir la date de la compétition (string) en objet datetime
-    competition_date = datetime.strptime(competition['date'], '%Y-%m-%d %H:%M:%S')
-    if competition_date < datetime.now():
-        flash("Action non autorisée : Cette compétition est déjà terminée.")
-        return render_template('welcome.html', club=club, competitions=competitions)
-    # --- FIN DE LA NOUVELLE LOGIQUE ---
-
+    # --- Début des vérifications ---
     try:
         placesRequired = int(request.form.get('places', 0))
     except ValueError:
-        flash('Nombre de places invalide.')
-        return redirect(url_for('index'))
-    
-    # S'assurer que le dictionnaire de suivi existe dans la compétition
-    competition.setdefault('placesBookedByClub', {})
-    # Récupérer les places déjà réservées par ce club pour cette compétition
-    places_already_booked = competition['placesBookedByClub'].get(club['name'], 0)
-
-     # Vérifier si le total des places (anciennes + nouvelles) dépasse 12
-    if places_already_booked + placesRequired > 12:
-        places_remaining_for_club = 12 - places_already_booked
-        flash(f"Action non autorisée : Vous avez déjà réservé {places_already_booked} places. Vous ne pouvez en réserver que {places_remaining_for_club} de plus pour cette compétition.")
-        return render_template('welcome.html', club=club, competitions=competitions)
-    # --- FIN DE LA NOUVELLE LOGIQUE ---
+        flash('Erreur : Veuillez entrer un nombre valide.')
+        return redirect(url_for('book', competition=competition['name'], club=club['name']))
 
     if placesRequired <= 0:
-        flash('Veuillez sélectionner au moins 1 place.')
-        return redirect(url_for('index'))
-    
-        # --- NOUVELLE VÉRIFICATION AJOUTÉE ---
-    if placesRequired > 12:
-        flash("Action non autorisée : vous ne pouvez pas réserver plus de 12 places à la fois.")
-        return render_template('welcome.html', club=club, competitions=competitions)
-    # --- FIN DE L'AJOUT ---
-        
-    club_points = int(club.get('points', 0))
-    competition_places = int(competition.get('numberOfPlaces', 0))
+        flash('Erreur : Vous devez réserver au moins 1 place.')
+        return redirect(url_for('book', competition=competition['name'], club=club['name']))
 
-    # VÉRIFICATION 1 : Le club a-t-il assez de points ?
-    if placesRequired > club_points:
-        flash(f"Achat impossible. Vous n'avez que {club_points} points.")
-        return render_template('welcome.html', club=club, competitions=competitions)
-
-    # VÉRIFICATION 2 : Y a-t-il assez de places ?
-    if placesRequired > competition_places:
-        flash(f"Action impossible : il ne reste que {competition_places} places disponibles.")
-        return render_template('welcome.html', club=club, competitions=competitions)
-        
-    # --- DÉBUT DE LA CORRECTION ---
-    # Si toutes les vérifications ci-dessus ont réussi, ALORS on fait la transaction.
-    # Cette section est maintenant au bon endroit.
+    # --- Vérifications qui affichent un message sur la page d'accueil ---
+    error = None # On prépare une variable pour les erreurs
     
-    club['points'] = club_points - placesRequired
-    competition['numberOfPlaces'] = competition_places - placesRequired
-        # Enregistrer le nouveau total de places réservées par le club
+    comp_date = datetime.strptime(competition['date'], '%Y-%m-%d %H:%M:%S')
+    if comp_date < datetime.now():
+        error = "Action non autorisée : Cette compétition est déjà terminée."
+
+    competition.setdefault('placesBookedByClub', {})
+    places_already_booked = competition['placesBookedByClub'].get(club['name'], 0)
+    if not error and places_already_booked + placesRequired > 12:
+        places_remaining_for_club = 12 - places_already_booked
+        error = f"Action non autorisée : Vous avez déjà {places_already_booked} places. Vous ne pouvez en réserver que {places_remaining_for_club} de plus."
+    
+    if not error and placesRequired > int(club.get('points', 0)):
+        error = f"Achat impossible. Vous n'avez que {club.get('points')} points."
+
+    if not error and placesRequired > int(competition.get('numberOfPlaces', 0)):
+        error = f"Action impossible : il ne reste que {competition.get('numberOfPlaces')} places disponibles."
+
+    # Si une erreur a été trouvée, on recharge la page d'accueil en affichant l'erreur
+    if error:
+        return render_template('welcome.html', club=club, competitions=competitions, error=error)
+    
+    # --- Si tout est OK, on procède à la transaction ---
+    club['points'] = int(club['points']) - placesRequired
+    competition['numberOfPlaces'] = int(competition['numberOfPlaces']) - placesRequired
     competition['placesBookedByClub'][club['name']] = places_already_booked + placesRequired
     saveData(clubs, competitions)
     
-    # --- FIN DE LA CORRECTION ---
-    
     flash('Réservation réussie ! Vos points ont été déduits.')
     return render_template('welcome.html', club=club, competitions=competitions)
-
 # TODO: Add route for points display
 
 

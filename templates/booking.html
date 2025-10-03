@@ -5,6 +5,15 @@
     <title>Booking for {{competition['name']}} || GUDLFT</title>
 </head>
 <body>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul style="color: red;">
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
     <h2>{{competition['name']}}</h2>
     Places available: {{competition['numberOfPlaces']}}
     <form action="/purchasePlaces" method="post">
