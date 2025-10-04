@@ -1,31 +1,73 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Classement des Points - GUDLFT</title>
-</head>
-<body>
-    
-    <h1>Tableau des Points des Clubs</h1>
-    <p>Ce tableau public assure la transparence sur le solde de points de chaque club.</p>
-    
-    <table border="1" style="width: 60%; border-collapse: collapse;">
-        <thead>
-            <tr style="background-color: #f2f2f2;">
-                <th style="padding: 8px;">Nom du Club</th>
-                <th style="padding: 8px;">Points Disponibles</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for club in clubs %}
-            <tr>
-                <td style="padding: 8px;">{{ club.name }}</td>
-                <td style="padding: 8px; text-align: center;">{{ club.points }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <br>
-    <a href="{{ url_for('index') }}">Retour à l'accueil</a>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Classement des Clubs - GUDLFT{% endblock %}
+
+{% block content %}
+<main class="container page-transition">
+
+    <section class="fade-in" style="text-align: center; margin: 3rem 0;">
+        <h1 style="font-size: 3rem; font-weight: 800; margin-bottom: 1rem;">
+            Classement <span style="color: var(--color-primary);">des Clubs</span>
+        </h1>
+        <p style="font-size: 1.2rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto;">
+            Tableau public assurant la transparence sur le solde de points de chaque club.
+        </p>
+    </section>
+
+    <section class="dashboard-grid slide-up">
+        <div class="stats-card">
+            <div class="stats-label">Clubs Participants</div>
+            <div class="stats-number">{{ clubs|length }}</div>
+            <div class="stats-desc">Nombre total de clubs actifs.</div>
+        </div>
+        <div class="stats-card">
+            <div class="stats-label">Total des Points</div>
+            <div class="stats-number">{{ total_points }}</div>
+            <div class="stats-desc">Somme de tous les points disponibles.</div>
+        </div>
+    </section>
+
+    <section class="slide-up-delay-1" style="margin-top: 3rem;">
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <div style="padding: 2rem 2rem 1rem;">
+                <h2 style="font-size: 2rem; font-weight: 700;">🏅 Classement Officiel</h2>
+            </div>
+            
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="text-align: center; width: 100px;">Rang</th>
+                        <th>Club</th>
+                        <th style="text-align: right; width: 150px;">Points</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for club in clubs %}
+                        <tr class="
+                            {% if loop.index <= 3 %}highlight{% endif %}
+                            {% if loop.index == 1 %}rank-gold{% endif %}
+                            {% if loop.index == 2 %}rank-silver{% endif %}
+                            {% if loop.index == 3 %}rank-bronze{% endif %}
+                        ">
+                        
+                            <td style="text-align: center; font-weight: 700; font-size: 1.2rem;">
+                                {% if loop.index == 1 %} 🥇 
+                                {% elif loop.index == 2 %} 🥈
+                                {% elif loop.index == 3 %} 🥉 
+                                {% else %} {{ loop.index }}
+                                {% endif %}
+                            </td>
+                            <td style="font-weight: 600; color: var(--text-primary);">
+                                {{ club.name }}
+                            </td>
+                            <td style="text-align: right; font-weight: 700; color: var(--color-primary); font-size: 1.1rem;">
+                                {{ club.points }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+{% endblock %}

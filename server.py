@@ -136,19 +136,22 @@ def purchasePlaces():
 @app.route('/points-board')
 def points_board():
     """
-    Affiche un tableau public et en lecture seule des points de chaque club.
-    Accessible sans connexion pour la transparence.
+    Affiche un tableau de bord public et trié des points de chaque club.
     """
     clubs = loadClubs()
 
+    # Trie les clubs pour le classement
     sorted_clubs = sorted(clubs, key=lambda item: int(item['points']), reverse=True)
+    
+    # --- NOUVELLE LOGIQUE : CALCULER LES STATISTIQUES ---
+    try:
+        total_points = sum(int(club['points']) for club in clubs)
+    except (ValueError, TypeError):
+        total_points = 0 # Sécurité si les points ne sont pas des nombres valides
+    # --- FIN DE LA NOUVELLE LOGIQUE ---
 
-    print("Contenu de la variable 'clubs' envoyée au template :", clubs)
-
-    return render_template('points_board.html', clubs=sorted_clubs)
-
-
-
+    # On envoie les clubs triés ET les statistiques à la page
+    return render_template('points_board.html', clubs=sorted_clubs, total_points=total_points)
 
 @app.route('/logout')
 def logout():

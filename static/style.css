@@ -293,3 +293,151 @@ footer {
   .logo { font-size: 1.25rem; }
   .login-title { font-size: 1.5rem; }
 }
+
+/* --- NOUVEAUX STYLES SPÉCIFIQUES AU TABLEAU DE CLASSEMENT --- */
+
+.table .rank-gold {
+  border-left: 4px solid #FFD700;
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.05), transparent);
+}
+.table .rank-silver {
+  border-left: 4px solid #C0C0C0;
+  background: linear-gradient(90deg, rgba(192, 192, 192, 0.05), transparent);
+}
+.table .rank-bronze {
+  border-left: 4px solid #CD7F32;
+  background: linear-gradient(90deg, rgba(205, 127, 50, 0.05), transparent);
+}
+
+/* --- CONTENEUR PRINCIPAL --- */
+/* Centre le contenu de la page et limite sa largeur */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* --- STYLE GÉNÉRAL DES CARTES --- */
+/* C'est le style de base pour tous les blocs avec effet "verre dépoli" */
+.card {
+  background: rgba(26, 26, 26, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 2rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px var(--shadow-dark);
+  border-color: rgba(255, 107, 0, 0.3);
+}
+
+/* --- GRILLE ET CARTES DE STATISTIQUES --- */
+/* Crée une grille qui s'adapte automatiquement pour les cartes de stats */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+/* Style spécifique pour les cartes de statistiques */
+.stats-card {
+  background: linear-gradient(135deg, rgba(26, 26, 26, 0.9), rgba(13, 27, 42, 0.8));
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stats-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Style pour les grands chiffres dans les cartes de stats */
+.stats-number {
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--color-primary), #FF8533);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+/* Style pour le titre de la statistique (ex: "Total des Points") */
+.stats-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+/* Style pour la petite description en dessous */
+.stats-desc {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+
+/* --- STYLE DES TABLEAUX --- */
+/* Style de base pour le tableau de classement */
+.table {
+  width: 100%;
+  border-collapse: collapse; /* Assure que les bordures sont propres */
+}
+
+.table th,
+.table td {
+  padding: 1rem 1.5rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(224, 224, 224, 0.05);
+}
+
+/* Style pour l'en-tête du tableau (Rang, Club, Points) */
+.table th {
+  background: rgba(255, 107, 0, 0.1);
+  font-weight: 600;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.875rem;
+}
+
+/* Effet au survol des lignes du tableau */
+.table tbody tr:hover {
+  background: rgba(255, 107, 0, 0.05);
+  transform: scale(1.01);
+  transition: all 0.3s ease;
+}
+
+/* Classe pour surligner une ligne (utilisée pour le top 3) */
+.table tbody tr.highlight {
+  background: rgba(255, 107, 0, 0.1);
+}
+
+
+/* --- ANIMATIONS DE TRANSITION DE PAGE --- */
+.page-transition {
+  animation: pageEnter 0.8s ease-out;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
