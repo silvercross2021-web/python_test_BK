@@ -1,0 +1,295 @@
+/* --- POLICE D'ÉCRITURE --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* --- VARIABLES DE COULEURS --- */
+:root {
+  --bg-primary: #0D1B2A;
+  --bg-secondary: #1A1A1A;
+  --color-primary: #FF6B00;
+  --text-primary: #E0E0E0;
+  --text-secondary: #B0B0B0;
+  --status-full: #FF4136;
+  --border-color: rgba(224, 224, 224, 0.1);
+  --shadow-primary: rgba(255, 107, 0, 0.3);
+  --shadow-dark: rgba(0, 0, 0, 0.5);
+}
+
+/* --- STYLE DE BASE ET FOND D'ÉCRAN ANIMÉ --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-primary) 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 30% 70%, rgba(255, 107, 0, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 70% 30%, rgba(0, 255, 127, 0.05) 0%, transparent 50%);
+  animation: breathe 8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* --- EN-TÊTE (HEADER), LOGO ET MENU "CLASSEMENT" --- */
+header {
+  position: sticky;
+  top: 0;
+  background: rgba(13, 27, 42, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 1000;
+  padding: 1rem 0;
+}
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 1.5rem;
+  transition: all 0.3s ease;
+}
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--color-primary), #FF8533);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+}
+nav ul {
+  display: flex;
+  list-style: none;
+  gap: 1rem;
+  align-items: center;
+}
+nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* --- EFFETS DE SURVOL (HOVER) ET ANIMATIONS --- */
+.logo:hover { color: var(--color-primary); transform: scale(1.05); }
+.logo:hover .logo-icon { transform: rotate(15deg) scale(1.1); }
+nav a::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--color-primary);
+  transition: width 0.3s ease;
+}
+nav a:hover::before { width: 100%; }
+nav a:hover { color: var(--text-primary); background: rgba(255, 107, 0, 0.1); transform: translateY(-2px); }
+.btn:hover { transform: scale(1.05) translateY(-2px); box-shadow: 0 10px 30px var(--shadow-primary); }
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+.btn:hover::before { left: 100%; }
+
+/* --- NOUVELLE MISE EN PAGE GAUCHE/DROITE --- */
+.split-screen-container {
+  display: flex;
+  min-height: 100vh;
+}
+.split-left {
+  flex: 0 0 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background: var(--bg-primary);
+}
+.split-right {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  flex: 1;
+  background-image: url('https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=2070&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
+}
+.split-right::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(13, 27, 42, 0.6);
+  z-index: 1;
+}
+
+/* --- CONTENU DES PANNEAUX --- */
+.login-content {
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+.promo-content {
+  position: relative;
+  z-index: 2;
+  color: white;
+  text-align: left;
+  padding: 3rem;
+  max-width: 500px;
+}
+.promo-content h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  text-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+.promo-content p {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+.login-logo {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, var(--color-primary), #FF8533);
+  border-radius: 20px;
+  margin: 0 auto 2rem;
+  font-size: 2rem;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: logoFloat 3s ease-in-out infinite;
+}
+.login-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, var(--text-primary), var(--color-primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.login-subtitle {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+}
+
+/* --- ÉLÉMENTS DE FORMULAIRE --- */
+.form-group { margin-bottom: 1.5rem; }
+.form-label { display: block; margin-bottom: 0.5rem; font-weight: 500; text-align: left; }
+.form-input {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: rgba(26, 26, 26, 0.8);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
+  transform: translateY(-2px);
+}
+.btn {
+  width: 100%;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, var(--color-primary), #FF8533);
+  color: white;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  font-size: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+.flash-error {
+  background: rgba(255, 65, 54, 0.2);
+  color: var(--status-full);
+  border: 1px solid rgba(255, 65, 54, 0.3);
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* --- ANIMATIONS --- */
+.slide-up { opacity: 0; transform: translateY(30px); animation: slideUp 0.8s ease-out forwards; }
+.slide-up-delay-1 { animation-delay: 0.2s; }
+.slide-up-delay-2 { animation-delay: 0.4s; }
+@keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+@keyframes logoFloat { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+@keyframes breathe { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } }
+
+/* --- PIED DE PAGE (FOOTER) --- */
+footer {
+  background: rgba(13, 27, 42, 0.95);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border-color);
+  padding: 2rem 0;
+  text-align: center;
+}
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  color: var(--text-secondary);
+}
+
+/* --- RESPONSIVE DESIGN (ADAPTATION AUX TABLETTES ET MOBILES) --- */
+@media (max-width: 768px) {
+  .header-container { padding: 0 1rem; }
+  .btn { padding: 0.75rem 1.5rem; font-size: 0.9rem; }
+  .split-screen-container { flex-direction: column; }
+  .split-left { flex: 1; }
+  .split-right { display: none; }
+}
+@media (max-width: 480px) {
+  .logo { font-size: 1.25rem; }
+  .login-title { font-size: 1.5rem; }
+}

@@ -1,30 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GUDLFT Registration</title>
-</head>
-<body>
-    <h1>Welcome to the GUDLFT Registration Portal!</h1>
-    
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul class="flashes" style="color: red; list-style-type: none; padding: 0;">
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
-    <p><a href="{{ url_for('points_board') }}">Voir le classement des points des clubs</a></p>
+{% extends "base.html" %}
 
-    <p>Please enter your secretary email to continue:</p>
-    
-    <form action="showSummary" method="post">
-        <label for="email">Email:</label>
-        <input type="email" name="email" id=""/>
-        <button type="submit">Enter</button>
-    </form>
-</body>
-</html>
+{% block title %}Connexion - GUDLFT Registration{% endblock %}
+
+{% block content %}
+
+<div class="split-screen-container">
+
+    <div class="split-right">
+        <div class="promo-content slide-up">
+            <h1>GUDLFT Registration</h1>
+            <p>La plateforme dédiée aux secrétaires de club pour des inscriptions simples et rapides aux compétitions régionales.</p>
+        </div>
+        </div>
+
+    <div class="split-left">
+        <div class="login-content slide-up">
+            
+            <div class="login-logo">G</div>
+            <h1 class="login-title">Bienvenue</h1>
+            <p class="login-subtitle">Connectez-vous avec votre email de secrétaire.</p>
+
+            {# Affiche les messages d'erreur (ex: email inconnu) #}
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="flash-error slide-up-delay-1">
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('showSummary') }}" method="post" class="slide-up-delay-1">
+                <div class="form-group">
+                    <label for="email" class="form-label">Adresse Email</label>
+                    <input type="email" name="email" id="email" class="form-input" required placeholder="vous@exemple.com">
+                </div>
+                <button type="submit" class="btn slide-up-delay-2" style="width: 100%;">Entrer</button>
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>{% block title %}GUDLFT Registration{% endblock %}</title>
+</head>
+<body>
+
+    <header class="fade-in">
+        <div class="header-container">
+            <a href="{{ url_for('index') }}" class="logo">
+                <div class="logo-icon">G</div>
+                <span>GUDLFT</span>
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('points_board') }}">Classement</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer class="fade-in">
+        <div class="footer-content">
+            <p>&copy; 2025 GUDLFT Registration System. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
