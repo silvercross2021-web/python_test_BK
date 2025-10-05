@@ -7,23 +7,28 @@
     <title>{% block title %}GUDLFT Registration{% endblock %}</title>
 </head>
 <body>
+
+    {# L'en-tête ne s'affiche que si la variable 'club' existe (c-à-d, si l'utilisateur est connecté) #}
+    {% if club %}
     <header class="fade-in">
         <div class="header-container">
             <a href="{{ url_for('index') }}" class="logo">
                 <div class="logo-icon">G</div>
                 <span>GUDLFT</span>
             </a>
-            {% if club %}
             <nav>
                 <ul>
-                    <li><a href="#" class="{{ 'active' if 'showSummary' in request.endpoint }}">Tableau de Bord</a></li>
+                    {# Le 'request.endpoint' permet de savoir quelle page est active #}
+                    {# Note : Le lien "Tableau de Bord" est désactivé car c'est une page POST #}
+                    <li><a href="{{ url_for('dashboard') }}" class="{{ 'active' if 'dashboard' in request.endpoint }}">Tableau de Bord</a></li>
+                    <li><a href="{{ url_for('competitions_list') }}" class="{{ 'active' if 'competitions_list' in request.endpoint }}">Compétitions</a></li>
                     <li><a href="{{ url_for('points_board') }}" class="{{ 'active' if 'points_board' in request.endpoint }}">Classement</a></li>
                     <li><a href="{{ url_for('logout') }}" style="color: #FF4136;">Déconnexion</a></li>
                 </ul>
             </nav>
-            {% endif %}
         </div>
     </header>
+    {% endif %}
 
     <main>
         {% block content %}{% endblock %}
@@ -34,5 +39,6 @@
             <p>&copy; 2025 GUDLFT Registration System. Tous droits réservés.</p>
         </div>
     </footer>
+
 </body>
 </html>

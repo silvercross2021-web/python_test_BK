@@ -3,10 +3,11 @@
         {
             "name": "Spring Festival",
             "date": "2026-03-27 10:00:00",
-            "numberOfPlaces": 15,
+            "numberOfPlaces": 2,
             "placesBookedByClub": {
                 "Iron Temple": 12,
-                "Simply Lift": 10
+                "Simply Lift": 11,
+                "She Lifts": 12
             }
         },
         {
@@ -17,9 +18,9 @@
         {
             "name": "Winter Lift-Off",
             "date": "2026-01-15 09:00:00",
-            "numberOfPlaces": 20,
+            "numberOfPlaces": 18,
             "placesBookedByClub": {
-                "Iron Temple": 10
+                "Iron Temple": 12
             }
         },
         {

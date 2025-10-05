@@ -801,3 +801,27 @@ nav a.active {
     transform: translateY(0);
   }
 }
+/* --- STYLE POUR LES ÉLÉMENTS DÉSACTIVÉS --- */
+
+/* Style pour un bouton désactivé */
+.btn:disabled {
+  background: var(--text-secondary);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Style pour un message d'information/avertissement */
+.flash-info {
+    background: rgba(255, 193, 7, 0.1);
+    color: var(--status-almost);
+    border: 1px solid rgba(255, 193, 7, 0.2);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    text-align: center;
+}

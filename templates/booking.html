@@ -1,26 +1,105 @@
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking for {{competition['name']}} || GUDLFT</title>
-</head>
-<body>
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul style="color: red;">
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
-    <h2>{{competition['name']}}</h2>
-    Places available: {{competition['numberOfPlaces']}}
-    <form action="/purchasePlaces" method="post">
-        <input type="hidden" name="club" value="{{club['name']}}">
-        <input type="hidden" name="competition" value="{{competition['name']}}">
-        <label for="places">How many places?</label><input type="number" name="places" id=""/>
-        <button type="submit">Book</button>
-    </form>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Réservation pour {{ competition.name }}{% endblock %}
+
+{% block content %}
+<main class="container page-transition">
+
+    <section class="fade-in" style="text-align: center; margin: 3rem 0;">
+        <h1 style="font-size: 3rem; font-weight: 800; margin-bottom: 1rem;">
+            Réservation de <span style="color: var(--color-primary);">Places</span>
+        </h1>
+        <p style="font-size: 1.2rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto;">
+            Finalisez l'inscription de vos athlètes pour la compétition.
+        </p>
+    </section>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 3rem; align-items: start;">
+        
+        <section class="slide-up">
+            <div class="card">
+                <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 2rem;">📝 Détails de la Réservation</h2>
+                
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="flash-error">
+                        {% for message in messages %}
+                            <p>{{ message }}</p>
+                        {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                {% if club.points|int > 0 %}
+                    <form action="{{ url_for('purchasePlaces') }}" method="post">
+                        <input type="hidden" name="club" value="{{ club.name }}">
+                        <input type="hidden" name="competition" value="{{ competition.name }}">
+                        
+                        <div class="form-group">
+                            <label class="form-label">Compétition</label>
+                            <input type="text" class="form-input" value="{{ competition.name }}" disabled>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="places">Nombre de places à réserver</label>
+                            <input type="number" id="places" name="places" class="form-input" required min="1" max="12" placeholder="Entrez un nombre entre 1 et 12">
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                            <button type="submit" class="btn" style="flex: 1;">
+                                Confirmer la Réservation 🎯
+                            </button>
+                            <a href="{{ url_for('dashboard') }}" class="btn-secondary" style="flex: 0 0 auto;">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                {% else %}
+                    <div class="flash-info">
+                        <h4 style="margin-bottom: 0.5rem;">Points insuffisants</h4>
+                        <p>Vous n'avez actuellement aucun point disponible pour effectuer une réservation.</p>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <button class="btn" disabled style="flex: 1;">Confirmer la Réservation 🎯</button>
+                        <a href="{{ url_for('dashboard') }}" class="btn-secondary" style="flex: 0 0 auto;">
+                            Annuler
+                        </a>
+                    </div>
+                {% endif %}
+                </div>
+        </section>
+
+        <section class="slide-up-delay-1">
+            <div class="card" style="position: sticky; top: 120px;">
+                <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">📊 Récapitulatif</h3>
+                
+                <div style="padding: 1.5rem; background: rgba(255,107,0,0.05); border-radius: 16px; margin-bottom: 1.5rem; border: 1px solid rgba(255,107,0,0.2);">
+                    <h4 style="font-weight: 600; margin-bottom: 1rem;">{{ competition.name }}</h4>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary);">
+                        <p style="margin-bottom: 0.5rem;">📅 {{ competition.date }}</p>
+                        <p>📍 {{ competition.numberOfPlaces }} places restantes</p>
+                    </div>
+                </div>
+
+                <div style="padding: 1.5rem; background: rgba(0,255,127,0.05); border-radius: 16px; margin-bottom: 1.5rem; border: 1px solid rgba(0,255,127,0.2);">
+                    <h4 style="font-weight: 600; margin-bottom: 1rem;">💰 Votre Solde</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--text-secondary);">Points disponibles:</span>
+                        <span style="color: var(--status-available); font-weight: 700; font-size: 1.1rem;">{{ club.points }}</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255,193,7,0.05); border-radius: 12px; border: 1px solid rgba(255,193,7,0.2);">
+                    <h5 style="color: var(--status-almost); font-weight: 600; margin-bottom: 0.75rem; font-size: 0.9rem;">⚠️ À RETENIR</h5>
+                    <ul style="color: var(--text-secondary); font-size: 0.8rem; line-height: 1.4; padding-left: 1rem;">
+                        <li style="margin-bottom: 0.25rem;">Chaque place coûte 1 point.</li>
+                        <li style="margin-bottom: 0.25rem;">Maximum 12 places par club et par compétition.</li>
+                        <li>Les inscriptions sont définitives.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</main>
+{% endblock %}

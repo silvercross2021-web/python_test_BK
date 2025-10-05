@@ -1,5 +1,5 @@
 import json
-from flask import Flask,render_template,request,redirect,flash,url_for
+from flask import Flask,render_template,request,redirect,flash,url_for, session
 from pathlib import Path
 from datetime import datetime
 
@@ -33,32 +33,53 @@ app.secret_key = 'something_special'
 def index():
     return render_template('index.html')
 
-@app.route('/showSummary',methods=['POST'])
+@app.route('/showSummary', methods=['POST'])
 def showSummary():
     clubs = loadClubs()
-    competitions = loadCompetitions()
     email = request.form.get('email', '').strip()
     club = next((c for c in clubs if c.get('email') == email), None)
     
-    if club is None:
+    if not club:
         flash('Adresse e-mail inconnue. Veuillez réessayer.')
         return redirect(url_for('index'))
     
-    # On étiquette les compétitions pour savoir si elles sont passées
+    # On enregistre l'email de l'utilisateur dans sa "carte de membre" (session)
+    session['email'] = club['email']
+    # On le redirige vers la nouvelle page du tableau de bord
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/dashboard')
+def dashboard():
+    if 'email' not in session:
+        return redirect(url_for('index'))
+
+    clubs = loadClubs()
+    competitions = loadCompetitions()
+    club = next((c for c in clubs if c.get('email') == session['email']), None)
+    
+    # Prépare les données pour l'affichage
+    future_competitions = []
+    total_places_booked = 0
     for comp in competitions:
         comp_date = datetime.strptime(comp['date'], '%Y-%m-%d %H:%M:%S')
         comp['is_past'] = comp_date < datetime.now()
+        
+        # Ne garder que les compétitions futures pour l'affichage principal
+        if not comp['is_past']:
+            future_competitions.append(comp)
 
-    # --- NOUVELLE LOGIQUE : CALCULER LES STATS DU CLUB ---
-    total_places_booked = 0
-    for comp in competitions:
-        # On vérifie si le dictionnaire des places réservées existe et si le club y figure
+        # Calculer le total des places réservées par le club
         if comp.get('placesBookedByClub') and club['name'] in comp['placesBookedByClub']:
             total_places_booked += int(comp['placesBookedByClub'][club['name']])
-    # --- FIN DE LA NOUVELLE LOGIQUE ---
- 
-    # On envoie toutes les informations au template du tableau de bord
-    return render_template('welcome.html', club=club, competitions=competitions, total_places_booked=total_places_booked)
+    
+    return render_template(
+        'welcome.html', 
+        club=club, 
+        competitions=future_competitions,  # On envoie la liste filtrée
+        total_places_booked=total_places_booked
+    )
+
 @app.route('/book/<competition>/<club>')
 def book(competition,club):
     competitions = loadCompetitions()
@@ -81,51 +102,52 @@ def book(competition,club):
     # Si la date est bonne, on affiche la page de réservation
     return render_template('booking.html', club=foundClub, competition=foundCompetition)
 
-@app.route('/purchasePlaces',methods=['POST'])
+@app.route('/purchasePlaces', methods=['POST'])
 def purchasePlaces():
+    if 'email' not in session:
+        return redirect(url_for('index'))
+
     competitions = loadCompetitions()
     clubs = loadClubs()
+    club = next((c for c in clubs if c.get('email') == session['email']), None)
     competition = next((c for c in competitions if c.get('name') == request.form.get('competition')), None)
-    club = next((c for c in clubs if c.get('name') == request.form.get('club')), None)
     
     if not competition or not club:
-        flash('Erreur : Club ou compétition introuvable. Transaction annulée.')
-        return redirect(url_for('index'))
-    
-    # --- Début des vérifications ---
+        flash('Erreur : Club ou compétition introuvable.')
+        return redirect(url_for('dashboard'))
+
     try:
         placesRequired = int(request.form.get('places', 0))
     except ValueError:
         flash('Erreur : Veuillez entrer un nombre valide.')
         return redirect(url_for('book', competition=competition['name'], club=club['name']))
 
+    # --- SÉRIE DE VÉRIFICATIONS SÉCURISÉES ---
+    
     if placesRequired <= 0:
         flash('Erreur : Vous devez réserver au moins 1 place.')
         return redirect(url_for('book', competition=competition['name'], club=club['name']))
 
-    # --- Vérifications qui affichent un message sur la page d'accueil ---
-    error = None # On prépare une variable pour les erreurs
-    
     comp_date = datetime.strptime(competition['date'], '%Y-%m-%d %H:%M:%S')
     if comp_date < datetime.now():
-        error = "Action non autorisée : Cette compétition est déjà terminée."
+        flash("Action non autorisée : Cette compétition est déjà terminée.")
+        return redirect(url_for('dashboard'))
 
     competition.setdefault('placesBookedByClub', {})
     places_already_booked = competition['placesBookedByClub'].get(club['name'], 0)
-    if not error and places_already_booked + placesRequired > 12:
+    if places_already_booked + placesRequired > 12:
         places_remaining_for_club = 12 - places_already_booked
-        error = f"Action non autorisée : Vous avez déjà {places_already_booked} places. Vous ne pouvez en réserver que {places_remaining_for_club} de plus."
+        flash(f"Action non autorisée : Vous avez déjà {places_already_booked} places. Il ne vous en reste que {places_remaining_for_club} à réserver.")
+        return redirect(url_for('dashboard'))
     
-    if not error and placesRequired > int(club.get('points', 0)):
-        error = f"Achat impossible. Vous n'avez que {club.get('points')} points."
+    if placesRequired > int(club.get('points', 0)):
+        flash(f"Achat impossible. Vous n'avez que {club.get('points')} points.")
+        return redirect(url_for('dashboard'))
 
-    if not error and placesRequired > int(competition.get('numberOfPlaces', 0)):
-        error = f"Action impossible : il ne reste que {competition.get('numberOfPlaces')} places disponibles."
+    if placesRequired > int(competition.get('numberOfPlaces', 0)):
+        flash(f"Action impossible : il ne reste que {competition.get('numberOfPlaces')} places disponibles.")
+        return redirect(url_for('dashboard'))
 
-    # Si une erreur a été trouvée, on recharge la page d'accueil en affichant l'erreur
-    if error:
-        return render_template('welcome.html', club=club, competitions=competitions, error=error)
-    
     # --- Si tout est OK, on procède à la transaction ---
     club['points'] = int(club['points']) - placesRequired
     competition['numberOfPlaces'] = int(competition['numberOfPlaces']) - placesRequired
@@ -133,9 +155,8 @@ def purchasePlaces():
     saveData(clubs, competitions)
     
     flash('Réservation réussie ! Vos points ont été déduits.')
-    return render_template('welcome.html', club=club, competitions=competitions)
-# TODO: Add route for points display
-
+    # On redirige TOUJOURS vers le tableau de bord pour afficher les données fraîches
+    return redirect(url_for('dashboard'))
 
 @app.route('/points-board')
 def points_board():
@@ -153,14 +174,68 @@ def points_board():
     except (ValueError, TypeError):
         total_points = 0 # Sécurité si les points ne sont pas des nombres valides
     # --- FIN DE LA NOUVELLE LOGIQUE ---
-
+    mock_club_for_header = clubs[0] if clubs else None
     # On envoie les clubs triés ET les statistiques à la page
-    return render_template('points_board.html', clubs=sorted_clubs, total_points=total_points)
+    return render_template('points_board.html', clubs=sorted_clubs, total_points=total_points,club=mock_club_for_header)
 
+@app.route('/competitions')
+def competitions_list():
+    """Affiche la liste complète et filtrable de toutes les compétitions."""
+    
+    # --- CORRECTION : VÉRIFIER LA CONNEXION D'ABORD ---
+    if 'email' not in session:
+        return redirect(url_for('index'))
 
+    all_competitions = loadCompetitions()
+    clubs = loadClubs()
+    
+    # --- CORRECTION : TROUVER LE VRAI CLUB CONNECTÉ ---
+    # Au lieu de prendre un club au hasard, on cherche celui de la session
+    club = next((c for c in clubs if c.get('email') == session['email']), None)
+    if not club:
+        # Si le club n'existe plus pour une raison quelconque, on déconnecte
+        session.pop('email', None)
+        return redirect(url_for('index'))
+
+    # --- Le reste de la logique de filtre ne change pas ---
+    status_filter = request.args.get('status', 'all')
+    date_filter_str = request.args.get('date', '')
+
+    filtered_competitions = []
+    for comp in all_competitions:
+        comp_date = datetime.strptime(comp['date'], '%Y-%m-%d %H:%M:%S')
+        is_past = comp_date < datetime.now()
+        comp['is_past'] = is_past
+
+        passes_status_filter = (
+            (status_filter == 'all') or
+            (status_filter == 'future' and not is_past) or
+            (status_filter == 'past' and is_past)
+        )
+
+        passes_date_filter = True
+        if date_filter_str:
+            try:
+                filter_date = datetime.strptime(date_filter_str, '%Y-%m-%d').date()
+                if comp_date.date() < filter_date:
+                    passes_date_filter = False
+            except ValueError:
+                passes_date_filter = True
+
+        if passes_status_filter and passes_date_filter:
+            filtered_competitions.append(comp)
+        
+    return render_template(
+        'competitions.html',
+        competitions=filtered_competitions,
+        club=club,  # On passe le VRAI club à la page
+        current_filters={'status': status_filter, 'date': date_filter_str}
+    )
 
 @app.route('/logout')
 def logout():
+    # On supprime la "carte de membre" de l'utilisateur
+    session.pop('email', None)
     return redirect(url_for('index'))
 
 

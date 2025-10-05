@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Compétitions - GUDLFT{% endblock %}
+
+{% block content %}
+<main class="container page-transition">
+
+    <section class="fade-in" style="text-align: center; margin: 3rem 0;">
+        <h1 style="font-size: 3rem; font-weight: 800; margin-bottom: 1rem;">
+            Toutes les <span style="color: var(--color-primary);">Compétitions</span>
+        </h1>
+        <p style="font-size: 1.2rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto;">
+            Découvrez, filtrez et inscrivez-vous aux compétitions passées et à venir.
+        </p>
+    </section>
+
+    <section class="slide-up" style="margin-bottom: 3rem;">
+        <div class="card" style="padding: 1.5rem;">
+            <form method="get" action="{{ url_for('competitions_list') }}">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: end;">
+                    
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="status" class="form-label">Statut</label>
+                        <select name="status" id="status" class="form-input">
+                            <option value="all" {% if current_filters.status == 'all' %}selected{% endif %}>Toutes</option>
+                            <option value="future" {% if current_filters.status == 'future' %}selected{% endif %}>À venir</option>
+                            <option value="past" {% if current_filters.status == 'past' %}selected{% endif %}>Passées</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="date" class="form-label">À partir du</label>
+                        <input type="date" name="date" id="date" class="form-input" value="{{ current_filters.date }}">
+                    </div>
+
+                    <button type="submit" class="btn" style="height: fit-content;">
+                        Filtrer 🔍
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="slide-up-delay-1">
+        {% for comp in competitions %}
+            <div class="card" style="margin-bottom: 2rem;">
+                <div style="display: grid; grid-template-columns: 1fr auto; gap: 2rem; align-items: center; flex-wrap: wrap;">
+                    
+                    <div> <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                            <div style="font-size: 2rem;">🏆</div>
+                            <h2 style="font-size: 1.8rem; font-weight: 700;">{{ comp.name }}</h2>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 1.5rem;">
+                            <div style="padding: 0.75rem; background: rgba(255,107,0,0.1); border-radius: 10px; text-align: center;">
+                                <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Date</div>
+                                <div style="font-weight: 600; color: var(--color-primary);">{{ comp.date }}</div>
+                            </div>
+                            <div style="padding: 0.75rem; background: rgba(255,107,0,0.1); border-radius: 10px; text-align: center;">
+                                <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Places Restantes</div>
+                                <div style="font-weight: 600; color: var(--color-primary);">{{ comp.numberOfPlaces }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center;"> {% set places_booked_by_club = comp.placesBookedByClub.get(club.name, 0) if comp.placesBookedByClub else 0 %}
+                        
+                        {% if comp.is_past %}
+                            <div class="status status-past" style="margin-bottom: 1rem;">Passée</div>
+                            <button class="btn" style="opacity: 0.5; cursor: not-allowed;" disabled>Indisponible</button>
+                        {% elif comp.numberOfPlaces|int == 0 %}
+                            <div class="status status-full" style="margin-bottom: 1rem;">Complète</div>
+                            <button class="btn" style="opacity: 0.5; cursor: not-allowed;" disabled>Complète</button>
+                        {% elif places_booked_by_club >= 12 %}
+                            <div class="status status-almost" style="margin-bottom: 1rem;">Quota Atteint</div>
+                            <button class="btn" style="opacity: 0.5; cursor: not-allowed;" disabled>Quota Atteint</button>
+                        {% else %}
+                            <div class="status status-available" style="margin-bottom: 1rem;">Disponible</div>
+                            <a href="{{ url_for('book',competition=comp['name'],club=club['name']) }}" class="btn">Réserver →</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% else %}
+             <div class="card" style="text-align: center;">
+                <p style="color: var(--text-secondary); font-size: 1.1rem;">Aucune compétition ne correspond à vos critères de recherche.</p>
+            </div>
+        {% endfor %}
+    </section>
+
+</main>
+{% endblock %}
