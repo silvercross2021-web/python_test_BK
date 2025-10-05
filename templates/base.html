@@ -7,18 +7,21 @@
     <title>{% block title %}GUDLFT Registration{% endblock %}</title>
 </head>
 <body>
-
     <header class="fade-in">
         <div class="header-container">
             <a href="{{ url_for('index') }}" class="logo">
                 <div class="logo-icon">G</div>
                 <span>GUDLFT</span>
             </a>
+            {% if club %}
             <nav>
                 <ul>
-                    <li><a href="{{ url_for('points_board') }}">Classement</a></li>
+                    <li><a href="#" class="{{ 'active' if 'showSummary' in request.endpoint }}">Tableau de Bord</a></li>
+                    <li><a href="{{ url_for('points_board') }}" class="{{ 'active' if 'points_board' in request.endpoint }}">Classement</a></li>
+                    <li><a href="{{ url_for('logout') }}" style="color: #FF4136;">Déconnexion</a></li>
                 </ul>
             </nav>
+            {% endif %}
         </div>
     </header>
 
@@ -31,6 +34,5 @@
             <p>&copy; 2025 GUDLFT Registration System. Tous droits réservés.</p>
         </div>
     </footer>
-
 </body>
 </html>

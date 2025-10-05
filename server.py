@@ -35,26 +35,30 @@ def index():
 
 @app.route('/showSummary',methods=['POST'])
 def showSummary():
-    competitions = loadCompetitions()
     clubs = loadClubs()
+    competitions = loadCompetitions()
     email = request.form.get('email', '').strip()
     club = next((c for c in clubs if c.get('email') == email), None)
+    
     if club is None:
         flash('Adresse e-mail inconnue. Veuillez réessayer.')
         return redirect(url_for('index'))
     
-    # --- NOUVELLE LOGIQUE : ÉTIQUETER LES COMPÉTITIONS ---
-    # On ne filtre plus, on ajoute une information à chaque compétition
+    # On étiquette les compétitions pour savoir si elles sont passées
     for comp in competitions:
         comp_date = datetime.strptime(comp['date'], '%Y-%m-%d %H:%M:%S')
-        if comp_date < datetime.now():
-            comp['is_past'] = True
-        else:
-            comp['is_past'] = False
+        comp['is_past'] = comp_date < datetime.now()
+
+    # --- NOUVELLE LOGIQUE : CALCULER LES STATS DU CLUB ---
+    total_places_booked = 0
+    for comp in competitions:
+        # On vérifie si le dictionnaire des places réservées existe et si le club y figure
+        if comp.get('placesBookedByClub') and club['name'] in comp['placesBookedByClub']:
+            total_places_booked += int(comp['placesBookedByClub'][club['name']])
     # --- FIN DE LA NOUVELLE LOGIQUE ---
  
-    return render_template('welcome.html',club=club,competitions=competitions)
-
+    # On envoie toutes les informations au template du tableau de bord
+    return render_template('welcome.html', club=club, competitions=competitions, total_places_booked=total_places_booked)
 @app.route('/book/<competition>/<club>')
 def book(competition,club):
     competitions = loadCompetitions()
@@ -152,6 +156,8 @@ def points_board():
 
     # On envoie les clubs triés ET les statistiques à la page
     return render_template('points_board.html', clubs=sorted_clubs, total_points=total_points)
+
+
 
 @app.route('/logout')
 def logout():
