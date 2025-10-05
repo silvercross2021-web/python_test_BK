@@ -114,39 +114,45 @@ def purchasePlaces():
     
     if not competition or not club:
         flash('Erreur : Club ou compétition introuvable.')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('dashboard')) # Erreur grave, on retourne au tableau de bord
 
     try:
         placesRequired = int(request.form.get('places', 0))
     except ValueError:
         flash('Erreur : Veuillez entrer un nombre valide.')
+        # On reste sur la page de réservation
         return redirect(url_for('book', competition=competition['name'], club=club['name']))
 
     # --- SÉRIE DE VÉRIFICATIONS SÉCURISÉES ---
     
     if placesRequired <= 0:
         flash('Erreur : Vous devez réserver au moins 1 place.')
+        # On reste sur la page de réservation
         return redirect(url_for('book', competition=competition['name'], club=club['name']))
 
     comp_date = datetime.strptime(competition['date'], '%Y-%m-%d %H:%M:%S')
     if comp_date < datetime.now():
         flash("Action non autorisée : Cette compétition est déjà terminée.")
+        # Erreur non corrigeable par l'utilisateur, on retourne au tableau de bord
         return redirect(url_for('dashboard'))
-
+    
     competition.setdefault('placesBookedByClub', {})
     places_already_booked = competition['placesBookedByClub'].get(club['name'], 0)
     if places_already_booked + placesRequired > 12:
         places_remaining_for_club = 12 - places_already_booked
         flash(f"Action non autorisée : Vous avez déjà {places_already_booked} places. Il ne vous en reste que {places_remaining_for_club} à réserver.")
-        return redirect(url_for('dashboard'))
+        # On reste sur la page de réservation pour qu'il puisse corriger
+        return redirect(url_for('book', competition=competition['name'], club=club['name']))
     
     if placesRequired > int(club.get('points', 0)):
         flash(f"Achat impossible. Vous n'avez que {club.get('points')} points.")
-        return redirect(url_for('dashboard'))
+        # On reste sur la page de réservation
+        return redirect(url_for('book', competition=competition['name'], club=club['name']))
 
     if placesRequired > int(competition.get('numberOfPlaces', 0)):
         flash(f"Action impossible : il ne reste que {competition.get('numberOfPlaces')} places disponibles.")
-        return redirect(url_for('dashboard'))
+        # On reste sur la page de réservation
+        return redirect(url_for('book', competition=competition['name'], club=club['name']))
 
     # --- Si tout est OK, on procède à la transaction ---
     club['points'] = int(club['points']) - placesRequired
@@ -155,29 +161,34 @@ def purchasePlaces():
     saveData(clubs, competitions)
     
     flash('Réservation réussie ! Vos points ont été déduits.')
-    # On redirige TOUJOURS vers le tableau de bord pour afficher les données fraîches
+    # En cas de SUCCÈS, on redirige vers le tableau de bord pour voir le résultat global
     return redirect(url_for('dashboard'))
 
 @app.route('/points-board')
 def points_board():
     """
-    Affiche un tableau de bord public et trié des points de chaque club.
+    Affiche un tableau de bord public et trié, avec le menu adapté.
     """
     clubs = loadClubs()
-
-    # Trie les clubs pour le classement
     sorted_clubs = sorted(clubs, key=lambda item: int(item['points']), reverse=True)
     
-    # --- NOUVELLE LOGIQUE : CALCULER LES STATISTIQUES ---
     try:
         total_points = sum(int(club['points']) for club in clubs)
     except (ValueError, TypeError):
-        total_points = 0 # Sécurité si les points ne sont pas des nombres valides
-    # --- FIN DE LA NOUVELLE LOGIQUE ---
-    mock_club_for_header = clubs[0] if clubs else None
-    # On envoie les clubs triés ET les statistiques à la page
-    return render_template('points_board.html', clubs=sorted_clubs, total_points=total_points,club=mock_club_for_header)
-
+        total_points = 0
+    
+    # On vérifie si un utilisateur est connecté via la session
+    logged_in_club = None
+    if 'email' in session:
+        logged_in_club = next((c for c in clubs if c.get('email') == session['email']), None)
+    
+    # On passe le club connecté (ou None) au template
+    return render_template(
+        'points_board.html', 
+        clubs=sorted_clubs, 
+        total_points=total_points, 
+        club=logged_in_club  # C'est cette variable qui contrôle le menu
+    )
 @app.route('/competitions')
 def competitions_list():
     """Affiche la liste complète et filtrable de toutes les compétitions."""
@@ -231,6 +242,73 @@ def competitions_list():
         club=club,  # On passe le VRAI club à la page
         current_filters={'status': status_filter, 'date': date_filter_str}
     )
+
+@app.route('/profile', methods=['GET', 'POST'])
+def profile():
+    """Affiche et gère la mise à jour du profil du club."""
+    if 'email' not in session:
+        return redirect(url_for('index'))
+
+    clubs = loadClubs()
+    all_competitions = loadCompetitions()
+    club = next((c for c in clubs if c.get('email') == session['email']), None)
+
+    if not club:
+        session.pop('email', None)
+        return redirect(url_for('index'))
+
+    # --- LOGIQUE DE MISE À JOUR (QUAND ON CLIQUE SUR "SAUVEGARDER") ---
+    if request.method == 'POST':
+        old_name = club['name']
+        new_name = request.form.get('club_name').strip()
+
+        # On ne fait la mise à jour que si le nom a réellement changé et n'est pas vide
+        if new_name and new_name != old_name:
+            
+            # --- CORRECTION DU BUG : MIGRATION DE L'HISTORIQUE ---
+            # On parcourt toutes les compétitions pour mettre à jour l'ancien nom
+            for comp in all_competitions:
+                if comp.get('placesBookedByClub') and old_name in comp['placesBookedByClub']:
+                    # On récupère le nombre de places réservées avec l'ancien nom
+                    places = comp['placesBookedByClub'].pop(old_name)
+                    # On ré-enregistre ces places avec le nouveau nom
+                    comp['placesBookedByClub'][new_name] = places
+            
+            # On met à jour le nom du club lui-même
+            club['name'] = new_name
+            
+            # On sauvegarde TOUT (les clubs et les compétitions modifiées)
+            saveData(clubs, all_competitions)
+            flash('Le nom du club a été mis à jour avec succès !')
+        
+        return redirect(url_for('profile'))
+        
+    # --- LOGIQUE D'AFFICHAGE (QUAND LA PAGE SE CHARGE) ---
+    
+    booking_history = []
+    for comp in all_competitions:
+        if comp.get('placesBookedByClub') and club['name'] in comp.get('placesBookedByClub'):
+            booking_info = {
+                'name': comp['name'],
+                'date': comp['date'],
+                'places': comp['placesBookedByClub'][club['name']]
+            }
+            booking_history.append(booking_info)
+
+    sorted_clubs = sorted(clubs, key=lambda item: int(item['points']), reverse=True)
+    current_rank = -1
+    for i, c in enumerate(sorted_clubs):
+        if c['email'] == club['email']:
+            current_rank = i + 1
+            break
+
+    return render_template(
+        'profile.html', 
+        club=club, 
+        history=booking_history, 
+        rank=current_rank
+    )
+
 
 @app.route('/logout')
 def logout():

@@ -10,25 +10,30 @@
 
     {# L'en-tête ne s'affiche que si la variable 'club' existe (c-à-d, si l'utilisateur est connecté) #}
     {% if club %}
-    <header class="fade-in">
-        <div class="header-container">
-            <a href="{{ url_for('index') }}" class="logo">
-                <div class="logo-icon">G</div>
-                <span>GUDLFT</span>
-            </a>
-            <nav>
-                <ul>
-                    {# Le 'request.endpoint' permet de savoir quelle page est active #}
-                    {# Note : Le lien "Tableau de Bord" est désactivé car c'est une page POST #}
+<header class="fade-in">
+    <div class="header-container">
+        <a href="{{ url_for('index') }}" class="logo">
+            <div class="logo-icon">G</div>
+            <span>GUDLFT</span>
+        </a>
+        <nav>
+            <ul>
+                {% if club %}
                     <li><a href="{{ url_for('dashboard') }}" class="{{ 'active' if 'dashboard' in request.endpoint }}">Tableau de Bord</a></li>
                     <li><a href="{{ url_for('competitions_list') }}" class="{{ 'active' if 'competitions_list' in request.endpoint }}">Compétitions</a></li>
                     <li><a href="{{ url_for('points_board') }}" class="{{ 'active' if 'points_board' in request.endpoint }}">Classement</a></li>
+                    <li><a href="{{ url_for('profile') }}" class="{{ 'active' if 'profile' in request.endpoint }}">Profil</a></li>
                     <li><a href="{{ url_for('logout') }}" style="color: #FF4136;">Déconnexion</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
-    {% endif %}
+                
+                {% else %}
+                    <li><a href="{{ url_for('points_board') }}" class="{{ 'active' if 'points_board' in request.endpoint }}">Classement</a></li>
+                    <li><a href="{{ url_for('index') }}" class="btn" style="padding: 0.75rem 1.5rem;">Connexion</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</header>
+{% endif %}
 
     <main>
         {% block content %}{% endblock %}

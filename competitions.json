@@ -3,12 +3,7 @@
         {
             "name": "Spring Festival",
             "date": "2026-03-27 10:00:00",
-            "numberOfPlaces": 2,
-            "placesBookedByClub": {
-                "Iron Temple": 12,
-                "Simply Lift": 11,
-                "She Lifts": 12
-            }
+            "numberOfPlaces": 25
         },
         {
             "name": "Fall Classic",
@@ -18,15 +13,20 @@
         {
             "name": "Winter Lift-Off",
             "date": "2026-01-15 09:00:00",
-            "numberOfPlaces": 18,
+            "numberOfPlaces": 3
+        },
+        {
+            "name": "Iron Gauntlet",
+            "date": "2026-05-10 09:00:00",
+            "numberOfPlaces": 20,
             "placesBookedByClub": {
-                "Iron Temple": 12
+                "She Lifts": 12
             }
         },
         {
-            "name": "Summer Strength Showdown",
-            "date": "2025-06-20 11:00:00",
-            "numberOfPlaces": 50
+            "name": "Stamina Challenge",
+            "date": "2026-07-01 14:00:00",
+            "numberOfPlaces": 0
         }
     ]
 }
