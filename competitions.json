@@ -13,14 +13,17 @@
         {
             "name": "Winter Lift-Off",
             "date": "2026-01-15 09:00:00",
-            "numberOfPlaces": 3
+            "numberOfPlaces": 1,
+            "placesBookedByClub": {
+                "Iron Temple": 2
+            }
         },
         {
             "name": "Iron Gauntlet",
             "date": "2026-05-10 09:00:00",
             "numberOfPlaces": 20,
             "placesBookedByClub": {
-                "She Lifts": 12
+                "She Lifts Pro": 12
             }
         },
         {
