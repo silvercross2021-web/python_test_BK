@@ -3,19 +3,20 @@ from flask import Flask,render_template,request,redirect,flash,url_for, session
 from pathlib import Path
 from datetime import datetime
 
-
 BASE_DIR = Path(__file__).resolve().parent
+
+# Fonction pour charger les clubs et compétitions depuis les fichiers JSON
 def loadClubs():
     with open(BASE_DIR / 'clubs.json', encoding='utf-8') as c:
          listOfClubs = json.load(c)['clubs']
          return listOfClubs
-
-
 def loadCompetitions():
     with open(BASE_DIR / 'competitions.json', encoding='utf-8') as comps:
          listOfCompetitions = json.load(comps)['competitions']
          return listOfCompetitions
+    
 
+# Fonction pour sauvegarder les clubs et compétitions dans les fichiers JSON
 def saveData(clubs, competitions):
     """Sauvegarde les listes de clubs et de compétitions dans leurs fichiers JSON respectifs."""
     with open(BASE_DIR / 'clubs.json', 'w', encoding='utf-8') as c:
@@ -24,11 +25,16 @@ def saveData(clubs, competitions):
         json.dump({'competitions': competitions}, comps, indent=4)
 
 
+# -----------------------
+# Configuration Flask
+# -----------------------
 app = Flask(__name__)
 app.secret_key = 'something_special'
 
 
-
+# -----------------------
+# Routes: Page d'accueil / Auth basique
+# -----------------------
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -49,6 +55,9 @@ def showSummary():
     return redirect(url_for('dashboard'))
 
 
+# -----------------------
+# Routes: Tableau de bord / affichage principal
+# -----------------------
 @app.route('/dashboard')
 def dashboard():
     if 'email' not in session:
@@ -61,6 +70,7 @@ def dashboard():
     # Prépare les données pour l'affichage
     future_competitions = []
     total_places_booked = 0
+
     for comp in competitions:
         comp_date = datetime.strptime(comp['date'], '%Y-%m-%d %H:%M:%S')
         comp['is_past'] = comp_date < datetime.now()
@@ -80,6 +90,10 @@ def dashboard():
         total_places_booked=total_places_booked
     )
 
+
+# -----------------------
+# Routes: Réservation (affichage + validation)
+# -----------------------
 @app.route('/book/<competition>/<club>')
 def book(competition,club):
     competitions = loadCompetitions()
@@ -138,12 +152,15 @@ def purchasePlaces():
     
     competition.setdefault('placesBookedByClub', {})
     places_already_booked = competition['placesBookedByClub'].get(club['name'], 0)
+
+    # On verifie si le club a atteint son quota
     if places_already_booked + placesRequired > 12:
         places_remaining_for_club = 12 - places_already_booked
         flash(f"Action non autorisée : Vous avez déjà {places_already_booked} places. Il ne vous en reste que {places_remaining_for_club} à réserver.")
         # On reste sur la page de réservation pour qu'il puisse corriger
         return redirect(url_for('book', competition=competition['name'], club=club['name']))
-    
+
+    # On verifie si le club a assez de points
     if placesRequired > int(club.get('points', 0)):
         flash(f"Achat impossible. Vous n'avez que {club.get('points')} points.")
         # On reste sur la page de réservation
@@ -164,6 +181,10 @@ def purchasePlaces():
     # En cas de SUCCÈS, on redirige vers le tableau de bord pour voir le résultat global
     return redirect(url_for('dashboard'))
 
+
+# -----------------------
+# Routes: Classement / Points publiques
+# -----------------------
 @app.route('/points-board')
 def points_board():
     """
@@ -189,6 +210,11 @@ def points_board():
         total_points=total_points, 
         club=logged_in_club  # C'est cette variable qui contrôle le menu
     )
+
+
+# -----------------------
+# Routes: Liste des compétitions (filtrage)
+# -----------------------
 @app.route('/competitions')
 def competitions_list():
     """Affiche la liste complète et filtrable de toutes les compétitions."""
@@ -243,6 +269,10 @@ def competitions_list():
         current_filters={'status': status_filter, 'date': date_filter_str}
     )
 
+
+# -----------------------
+# Routes: Profil / mise à jour
+# -----------------------
 @app.route('/profile', methods=['GET', 'POST'])
 def profile():
     """Affiche et gère la mise à jour du profil du club."""
@@ -310,6 +340,9 @@ def profile():
     )
 
 
+# -----------------------
+# Routes: Déconnexion
+# -----------------------
 @app.route('/logout')
 def logout():
     # On supprime la "carte de membre" de l'utilisateur
@@ -317,7 +350,8 @@ def logout():
     return redirect(url_for('index'))
 
 
-
-
+# -----------------------
+# Lancement de l'application
+# -----------------------
 if __name__ == '__main__':
     app.run(debug=True)

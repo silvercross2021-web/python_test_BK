@@ -57,7 +57,7 @@
                             </div>
                             <div style="padding: 0.75rem; background: rgba(255,107,0,0.1); border-radius: 10px; text-align: center;">
                                 <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Places Restantes</div>
-                                <div style="font-weight: 600; color: var(--color-primary);">{{ comp.numberOfPlaces }}</div>
+                               <div style="font-weight: 600; color: var(--color-primary);">{{ comp.get('numberOfPlaces', 0) }}</div>
                             </div>
                         </div>
                     </div>
@@ -67,7 +67,7 @@
                         {% if comp.is_past %}
                             <div class="status status-past" style="margin-bottom: 1rem;">Passée</div>
                             <button class="btn" style="opacity: 0.5; cursor: not-allowed;" disabled>Indisponible</button>
-                        {% elif comp.numberOfPlaces|int == 0 %}
+                       {% elif comp.get('numberOfPlaces')|int == 0 %}
                             <div class="status status-full" style="margin-bottom: 1rem;">Complète</div>
                             <button class="btn" style="opacity: 0.5; cursor: not-allowed;" disabled>Complète</button>
                         {% elif places_booked_by_club >= 12 %}

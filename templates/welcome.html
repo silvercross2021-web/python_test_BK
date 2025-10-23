@@ -4,6 +4,21 @@
 
 {% block content %}
 <main class="container page-transition">
+    <main class="container page-transition">
+
+    {# --- BLOC À AJOUTER --- #}
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flash-error" style="background: rgba(0,255,127,0.1); color: var(--status-available); border-color: rgba(0,255,127,0.2); margin-bottom: 2rem;">
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    {# --- FIN DU BLOC --- #}
+
+    <section class="fade-in" style="text-align: center; margin: 3rem 0;">
 
     <section class="fade-in" style="text-align: center; margin: 3rem 0;">
         <h1 style="font-size: 3rem; font-weight: 800; margin-bottom: 1rem; background: linear-gradient(135deg, var(--text-primary), var(--color-primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
@@ -65,14 +80,14 @@
                             <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem;">{{ comp.name }}</h3>
                             <div style="display: flex; gap: 1rem; font-size: 0.9rem; color: var(--text-secondary);">
                                 <span>📅 {{ comp.date }}</span>
-                                <span>📍 {{ comp.numberOfPlaces }} places restantes</span>
+                                <span>📍 {{ comp.get('numberOfPlaces', 0) }} places restantes</span>
                             </div>
                         </div>
 
                         <div> {# Ce div conteneur isole la zone cliquable #}
                             {% set places_booked_by_club = comp.placesBookedByClub.get(club.name, 0) if comp.placesBookedByClub else 0 %}
                             
-                            {% if comp.numberOfPlaces|int == 0 %}
+                            {% if comp.get('numberOfPlaces')|int == 0 %}
                                 <div class="status status-full">Complète</div>
                             {% elif places_booked_by_club >= 12 %}
                                 <div class="status status-almost">Quota atteint</div>
